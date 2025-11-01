@@ -38,5 +38,5 @@ jobs:
         if: github.event_name == 'push'
         run: |
           cd api-gateway
-          docker build -t rafaelaruiz/api-gateway-ecommerce-boot:stage .
-          docker push rafaelaruiz/api-gateway-ecommerce-boot:stage
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway-ecommerce-boot:stage .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway-ecommerce-boot:stage

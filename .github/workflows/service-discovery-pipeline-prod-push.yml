@@ -38,5 +38,5 @@ jobs:
         if: github.event_name == 'push'
         run: |
           cd service-discovery
-          docker build -t rafaelaruiz/service-discovery-ecommerce-boot:latest .
-          docker push rafaelaruiz/service-discovery-ecommerce-boot:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/service-discovery-ecommerce-boot:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/service-discovery-ecommerce-boot:latest

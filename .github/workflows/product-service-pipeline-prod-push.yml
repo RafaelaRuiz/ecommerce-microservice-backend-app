@@ -38,5 +38,5 @@ jobs:
         if: github.event_name == 'push'
         run: |
           cd product-service
-          docker build -t rafaelaruiz/product-service-ecommerce-boot:latest .
-          docker push rafaelaruiz/product-service-ecommerce-boot:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/product-service-ecommerce-boot:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/product-service-ecommerce-boot:latest
