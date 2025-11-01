@@ -1,11 +1,25 @@
 
-FROM openjdk:11
-ARG PROJECT_VERSION=0.1.0
-RUN mkdir -p /home/app
+FROM eclipse-temurin:11-jre-jammy
+
+ARG JAR_FILE=target/*.jar
+ENV JAVA_OPTS=""
+
+# create non-root user
+RUN addgroup --system app && adduser --system --ingroup app app
+
 WORKDIR /home/app
-COPY cloud-config/ .
-ADD cloud-config/target/cloud-config-v${PROJECT_VERSION}.jar cloud-config.jar
+
+# copy the already-built jar (build with ./mvnw package before docker build)
+COPY ${JAR_FILE} app.jar
+RUN chown app:app /home/app/app.jar
+
+USER app
+
 EXPOSE 9296
-ENTRYPOINT ["java", "-jar", "cloud-config.jar"]
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+	CMD curl -f http://localhost:9296/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /home/app/app.jar"]
 
 
