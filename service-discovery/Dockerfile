@@ -5,6 +5,9 @@ ARG JAR_FILE=target/*.jar
 ENV JAVA_OPTS=""
 ENV SPRING_PROFILES_ACTIVE=dev
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system app && adduser --system --ingroup app app
 WORKDIR /home/app
 
