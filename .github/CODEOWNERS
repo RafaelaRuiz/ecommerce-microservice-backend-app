@@ -1,0 +1,54 @@
+# CODEOWNERS file for automatic reviewer assignment
+# 
+# This file defines who should be automatically requested as a reviewer
+# when a pull request touches specific files or directories.
+#
+# Format: <file-pattern> @username1 @username2 @org/team-name
+#
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners.
+# The pattern can use glob syntax (* matches any string except /, ** matches any string including /)
+#
+# For more information, see:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+# This catches all files unless a more specific pattern matches
+* @RafaelaRuiz
+
+# API Gateway service
+/api-gateway/ @RafaelaRuiz
+
+# Cloud Configuration service
+/cloud-config/ @RafaelaRuiz
+
+# Service Discovery
+/service-discovery/ @RafaelaRuiz
+
+# Proxy Client (Authentication & Authorization)
+/proxy-client/ @RafaelaRuiz
+
+# Business Services
+/user-service/ @RafaelaRuiz
+/product-service/ @RafaelaRuiz
+/favourite-service/ @RafaelaRuiz
+/order-service/ @RafaelaRuiz
+/shipping-service/ @RafaelaRuiz
+/payment-service/ @RafaelaRuiz
+
+# CI/CD Workflows
+/.github/workflows/ @RafaelaRuiz
+
+# Documentation
+*.md @RafaelaRuiz
+/docs/ @RafaelaRuiz
+
+# Docker and Kubernetes configurations
+docker-compose*.yml @RafaelaRuiz
+compose.yml @RafaelaRuiz
+/k8s/ @RafaelaRuiz
+
+# Build configuration
+pom.xml @RafaelaRuiz
+mvnw @RafaelaRuiz
+mvnw.cmd @RafaelaRuiz

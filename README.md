@@ -610,6 +610,78 @@ Removing ecommerce-microservice-backend-app_api-gateway-container_1       ... do
 Removing ecommerce-microservice-backend-app_favourite-service-container_1 ... done
 Removing network ecommerce-microservice-backend-app_default
 ```
+
+## Code Review and Collaboration
+
+### Automatic Code Reviewers
+
+This repository uses a **CODEOWNERS** file to automatically assign reviewers to pull requests. When you create a pull request, GitHub will automatically request reviews from the designated code owners based on the files you've changed.
+
+#### How CODEOWNERS Works
+
+The `.github/CODEOWNERS` file defines ownership rules for different parts of the repository:
+- **Pattern-based assignment**: Different files and directories can have different owners
+- **Automatic review requests**: When a PR touches specific files, the designated owners are automatically added as reviewers
+- **Required reviews**: Repository settings can enforce that code owner approval is required before merging
+
+#### Current Configuration
+
+The current CODEOWNERS file assigns `@RafaelaRuiz` as the default reviewer for all changes. This includes:
+- All microservices (api-gateway, user-service, product-service, etc.)
+- CI/CD workflows
+- Documentation files
+- Configuration files (Docker, Kubernetes, Maven)
+
+#### How to Add Yourself or Others as Reviewers
+
+To add yourself or additional reviewers to the CODEOWNERS file:
+
+1. **Edit the `.github/CODEOWNERS` file** in your branch
+2. **Add GitHub usernames** (prefixed with `@`) or team names (format: `@org/team-name`)
+3. **Choose specific patterns** or use the wildcard `*` for all files
+
+**Example configurations:**
+
+```bash
+# Add yourself as a reviewer for everything
+* @your-github-username
+
+# Add multiple reviewers
+* @RafaelaRuiz @another-reviewer @third-reviewer
+
+# Add specific reviewers for specific services
+/user-service/ @user-service-expert
+/payment-service/ @payment-team-lead @RafaelaRuiz
+/order-service/ @order-specialist
+
+# Add team-based reviews (requires GitHub organization)
+* @your-org/backend-team
+
+# Add reviewers for documentation only
+*.md @doc-writer @RafaelaRuiz
+```
+
+#### Making Yourself a Reviewer
+
+If you want to be added as a reviewer for this repository:
+
+1. Fork the repository or create a new branch
+2. Edit `.github/CODEOWNERS`
+3. Add your GitHub username to the appropriate patterns
+4. Submit a pull request with your changes
+5. Once merged, you'll automatically be requested as a reviewer on future PRs
+
+**Example**: To add yourself as a co-reviewer for all files:
+```bash
+# In .github/CODEOWNERS, change:
+* @RafaelaRuiz
+
+# To:
+* @RafaelaRuiz @your-username
+```
+
+For more details on CODEOWNERS syntax and features, see [GitHub's CODEOWNERS documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+
 ### The End
 In the end, I hope you enjoyed the application and find it useful, as I did when I was developing it. 
 If you would like to enhance, please: 
