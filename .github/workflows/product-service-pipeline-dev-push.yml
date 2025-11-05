@@ -20,39 +20,11 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      # ============================================
-      # PASO 1: Ejecutar TODAS las pruebas
-      # ============================================
-      - name: Run Unit Tests
-        run: ./mvnw test -pl product-service -Dtest=ProductServiceTest
-        continue-on-error: false
+      - name: Build with Maven (product-service only)
+        run: ./mvnw -B -DskipTests package -pl product-service -am
 
-      - name: Run Integration Tests
-        run: ./mvnw test -pl product-service -Dtest=ProductServiceIntegrationTest
-        continue-on-error: false
-
-      - name: Run E2E Tests
-        run: ./mvnw test -pl product-service -Dtest=ProductFlowE2ETest
-        continue-on-error: true
-
-      # ============================================
-      # PASO 2: Generar reporte de cobertura
-      # ============================================
-      - name: Generate JaCoCo Coverage Report
-        run: ./mvnw jacoco:report -pl product-service
-
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./product-service/target/site/jacoco/jacoco.xml
-          flags: unittests
-          name: product-service-coverage
-
-      # ============================================
-      # PASO 3: Build SOLO si los tests pasan
-      # ============================================
-      - name: Build with Maven
-        run: ./mvnw -B package -pl product-service -am
+      - name: Run tests
+        run: ./mvnw test -pl product-service
 
       - name: Login to Docker Hub
         if: github.event_name == 'push'
@@ -61,27 +33,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ============================================
-      # PASO 4: Docker Build y Push (solo si todo pasó)
-      # ============================================
       - name: Build and push Docker image
         if: github.event_name == 'push'
         run: |
           cd product-service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/product-service-ecommerce-boot:dev .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/product-service-ecommerce-boot:dev
-
-      # ============================================
-      # PASO 5: Comentar resultado en el PR
-      # ============================================
-      - name: Comment PR with test results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ All tests passed for product-service!\n\n**Test Summary:**\n- ✅ Unit Tests: 8/8 passed\n- ✅ Integration Tests: 8/8 passed\n- ✅ E2E Tests: 6/6 passed\n\nDocker image will be built after merge to dev.'
-            })

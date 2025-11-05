@@ -1,6 +1,8 @@
 package com.selimhorri.app.service;
 
+import com.selimhorri.app.domain.Category;
 import com.selimhorri.app.domain.Product;
+import com.selimhorri.app.dto.CategoryDto;
 import com.selimhorri.app.dto.ProductDto;
 import com.selimhorri.app.exception.wrapper.ProductNotFoundException;
 import com.selimhorri.app.repository.ProductRepository;
@@ -37,10 +39,21 @@ class ProductServiceTest {
 
     private Product testProduct;
     private ProductDto testProductDto;
+    private Category testCategory;
+    private CategoryDto testCategoryDto;
 
     @BeforeEach
     void setUp() {
-        // Crear producto de prueba
+        // Crear categoría de prueba
+        testCategory = new Category();
+        testCategory.setCategoryId(1);
+        testCategory.setCategoryTitle("Electronics");
+
+        testCategoryDto = new CategoryDto();
+        testCategoryDto.setCategoryId(1);
+        testCategoryDto.setCategoryTitle("Electronics");
+
+        // Crear producto de prueba con categoría asociada
         testProduct = new Product();
         testProduct.setProductId(1);
         testProduct.setProductTitle("Test Product");
@@ -48,6 +61,7 @@ class ProductServiceTest {
         testProduct.setSku("TEST-SKU-001");
         testProduct.setPriceUnit(99.99);
         testProduct.setQuantity(50);
+        testProduct.setCategory(testCategory);  // IMPORTANTE: Asociar la categoría
 
         testProductDto = new ProductDto();
         testProductDto.setProductId(1);
@@ -56,6 +70,7 @@ class ProductServiceTest {
         testProductDto.setSku("TEST-SKU-001");
         testProductDto.setPriceUnit(99.99);
         testProductDto.setQuantity(50);
+        testProductDto.setCategoryDto(testCategoryDto);  // IMPORTANTE: Asociar el CategoryDto
     }
 
     // ============================================
@@ -126,12 +141,21 @@ class ProductServiceTest {
     @DisplayName("4. Debe retornar todos los productos disponibles")
     void testFindAll_ShouldReturnAllProducts() {
         // Given
+        Category category1 = new Category();
+        category1.setCategoryId(1);
+        category1.setCategoryTitle("Electronics");
+
+        Category category2 = new Category();
+        category2.setCategoryId(2);
+        category2.setCategoryTitle("Books");
+
         Product product1 = new Product();
         product1.setProductId(1);
         product1.setProductTitle("Product 1");
         product1.setSku("SKU-001");
         product1.setPriceUnit(99.99);
         product1.setQuantity(10);
+        product1.setCategory(category1);
 
         Product product2 = new Product();
         product2.setProductId(2);
@@ -139,6 +163,7 @@ class ProductServiceTest {
         product2.setSku("SKU-002");
         product2.setPriceUnit(149.99);
         product2.setQuantity(20);
+        product2.setCategory(category2);
 
         when(productRepository.findAll()).thenReturn(Arrays.asList(product1, product2));
 

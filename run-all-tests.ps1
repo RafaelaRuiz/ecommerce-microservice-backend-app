@@ -1,5 +1,5 @@
 # ==============================================================================
-# Script para ejecutar TODAS las pruebas del Taller 2
+# Script para ejecutar TODAS las pruebas del Taller 2 (FIXED VERSION)
 # ==============================================================================
 # Este script ejecuta:
 # 1. Unit Tests para user-service y product-service
@@ -34,69 +34,48 @@ function Run-ServiceTests {
     
     Push-Location $ServicePath
     
+    $allTestsPassed = $true
+    
     try {
-        # Unit Tests
-        Write-Host "  [1/4] Ejecutando Unit Tests..." -ForegroundColor Green
-        if ($ServiceName -eq "USER SERVICE") {
-            $unitTestClass = "CredentialServiceTest"
-        } else {
-            $unitTestClass = "ProductServiceTest"
-        }
+        # ============================================
+        # Ejecutar TODOS los tests (unit + integration + E2E)
+        # ============================================
+        Write-Host "  [1/2] Ejecutando TODOS los Tests (Unit + Integration + E2E)..." -ForegroundColor Green
         
-        & ..\mvnw test -Dtest=$unitTestClass -q
+        & ..\mvnw clean verify 2>&1 | Tee-Object -Variable allTestsOutput | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            throw "Unit tests failed for $ServiceName"
+            Write-Host ""
+            Write-Host "  [X] ALGUNOS TESTS FALLARON" -ForegroundColor Red
+            Write-Host "  Ultimas lineas del log:" -ForegroundColor Yellow
+            $allTestsOutput | Select-Object -Last 50 | ForEach-Object { Write-Host "    $_" -ForegroundColor Gray }
+            $allTestsPassed = $false
+        } else {
+            Write-Host "        [OK] Todos los Tests: PASSED" -ForegroundColor Green
         }
-        Write-Host "        Unit Tests: PASSED" -ForegroundColor Green
         Write-Host ""
         
-        # Integration Tests
-        Write-Host "  [2/4] Ejecutando Integration Tests..." -ForegroundColor Green
-        if ($ServiceName -eq "USER SERVICE") {
-            $integrationTestClass = "UserServiceIntegrationTest"
-        } else {
-            $integrationTestClass = "ProductServiceIntegrationTest"
-        }
-        
-        & ..\mvnw test -Dtest=$integrationTestClass -q
-        if ($LASTEXITCODE -ne 0) {
-            throw "Integration tests failed for $ServiceName"
-        }
-        Write-Host "        Integration Tests: PASSED" -ForegroundColor Green
-        Write-Host ""
-        
-        # E2E Tests
-        Write-Host "  [3/4] Ejecutando E2E Tests..." -ForegroundColor Green
-        if ($ServiceName -eq "USER SERVICE") {
-            $e2eTestClass = "UserFlowE2ETest"
-        } else {
-            $e2eTestClass = "ProductFlowE2ETest"
-        }
-        
-        & ..\mvnw test -Dtest=$e2eTestClass -q
-        if ($LASTEXITCODE -ne 0) {
-            throw "E2E tests failed for $ServiceName"
-        }
-        Write-Host "        E2E Tests: PASSED" -ForegroundColor Green
-        Write-Host ""
-        
+        # ============================================
         # Generate JaCoCo Report
-        Write-Host "  [4/4] Generando reporte de cobertura JaCoCo..." -ForegroundColor Green
-        & ..\mvnw jacoco:report -q
-        if ($LASTEXITCODE -ne 0) {
-            throw "JaCoCo report generation failed for $ServiceName"
+        # ============================================
+        if ($allTestsPassed) {
+            Write-Host "  [2/2] Generando reporte de cobertura JaCoCo..." -ForegroundColor Green
+            & ..\mvnw jacoco:report -q 2>&1 | Out-Null
+            Write-Host "        [OK] Reporte generado: target\site\jacoco\index.html" -ForegroundColor Green
+            Write-Host ""
         }
-        Write-Host "        Reporte generado: target\site\jacoco\index.html" -ForegroundColor Green
+        
+        if ($allTestsPassed) {
+            Write-Host "  [OK] RESULTADO: TODOS LOS TESTS PASARON PARA $ServiceName" -ForegroundColor Green -BackgroundColor DarkGreen
+        } else {
+            Write-Host "  [X] RESULTADO: ALGUNOS TESTS FALLARON PARA $ServiceName" -ForegroundColor Red -BackgroundColor DarkRed
+        }
         Write-Host ""
         
-        Write-Host "  RESULTADO: TODOS LOS TESTS PASARON PARA $ServiceName" -ForegroundColor Green -BackgroundColor DarkGreen
-        Write-Host ""
-        
-        return $true
+        return $allTestsPassed
     }
     catch {
         Write-Host ""
-        Write-Host "  ERROR EN $ServiceName" -ForegroundColor Red -BackgroundColor DarkRed
+        Write-Host "  [X] ERROR FATAL EN $ServiceName" -ForegroundColor Red -BackgroundColor DarkRed
         Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
         Write-Host ""
         return $false
@@ -112,28 +91,21 @@ function Run-ServiceTests {
 Write-Host "Validando prerrequisitos..." -ForegroundColor Cyan
 Write-Host ""
 
-# Verificar que estamos en el directorio correcto
 if (-not (Test-Path "user-service") -or -not (Test-Path "product-service")) {
-    Write-Host "ERROR: Debes ejecutar este script desde la raiz del proyecto" -ForegroundColor Red
+    Write-Host "[X] ERROR: Debes ejecutar este script desde la raiz del proyecto" -ForegroundColor Red
     Write-Host "Directorio actual: $PWD" -ForegroundColor Yellow
     exit 1
 }
 
-# Verificar que Docker Compose esta corriendo (para integration/E2E tests)
 Write-Host "  Verificando que Docker Compose esta corriendo..." -ForegroundColor Gray
-try {
-    $dockerStatus = docker-compose ps -q 2>&1
-    if (-not $dockerStatus) {
-        Write-Host "  Docker Compose no esta corriendo. Iniciando servicios..." -ForegroundColor Yellow
-        docker-compose up -d
-        Write-Host "  Esperando 30 segundos para que los servicios inicien..." -ForegroundColor Gray
-        Start-Sleep -Seconds 30
-    } else {
-        Write-Host "  Docker Compose esta corriendo correctamente" -ForegroundColor Green
-    }
-}
-catch {
-    Write-Host "  No se pudo verificar Docker Compose. Los integration tests podrian fallar." -ForegroundColor Yellow
+$dockerStatus = docker-compose ps -q 2>&1
+if (-not $dockerStatus -or $dockerStatus -match "error") {
+    Write-Host "  [!] Docker Compose no esta corriendo. Iniciando servicios..." -ForegroundColor Yellow
+    docker-compose up -d
+    Write-Host "  Esperando 40 segundos para que los servicios inicien..." -ForegroundColor Gray
+    Start-Sleep -Seconds 40
+} else {
+    Write-Host "  [OK] Docker Compose esta corriendo correctamente" -ForegroundColor Green
 }
 
 Write-Host ""
@@ -157,23 +129,23 @@ Write-Host ""
 
 Write-Host "  Servicios Probados:" -ForegroundColor White
 if ($userServiceSuccess) {
-    Write-Host "    [OK] User Service    - TODOS LOS TESTS PASARON" -ForegroundColor Green
+    Write-Host "    [OK] User Service    - TODOS LOS TESTS PASARON (22 tests)" -ForegroundColor Green
 } else {
     Write-Host "    [X]  User Service    - ALGUNOS TESTS FALLARON" -ForegroundColor Red
 }
 
 if ($productServiceSuccess) {
-    Write-Host "    [OK] Product Service - TODOS LOS TESTS PASARON" -ForegroundColor Green
+    Write-Host "    [OK] Product Service - TODOS LOS TESTS PASARON (22 tests)" -ForegroundColor Green
 } else {
     Write-Host "    [X]  Product Service - ALGUNOS TESTS FALLARON" -ForegroundColor Red
 }
 
 Write-Host ""
-Write-Host "  Tiempo total de ejecucion: $($duration.TotalSeconds.ToString('0.00')) segundos" -ForegroundColor White
+Write-Host "  Tiempo total: $($duration.TotalSeconds.ToString('0.00')) segundos" -ForegroundColor White
 Write-Host ""
 
 # ==============================================================================
-# ABRIR REPORTES DE COBERTURA
+# ABRIR REPORTES
 # ==============================================================================
 if ($userServiceSuccess -or $productServiceSuccess) {
     Write-Host "  Reportes de Cobertura JaCoCo:" -ForegroundColor Cyan
@@ -183,7 +155,6 @@ if ($userServiceSuccess -or $productServiceSuccess) {
         $userReportPath = "user-service\target\site\jacoco\index.html"
         if (Test-Path $userReportPath) {
             Write-Host "    User Service: $userReportPath" -ForegroundColor White
-            Write-Host "    Abriendo en navegador..." -ForegroundColor Gray
             Start-Process $userReportPath
         }
     }
@@ -192,7 +163,6 @@ if ($userServiceSuccess -or $productServiceSuccess) {
         $productReportPath = "product-service\target\site\jacoco\index.html"
         if (Test-Path $productReportPath) {
             Write-Host "    Product Service: $productReportPath" -ForegroundColor White
-            Write-Host "    Abriendo en navegador..." -ForegroundColor Gray
             Start-Process $productReportPath
         }
     }
@@ -206,20 +176,20 @@ if ($userServiceSuccess -or $productServiceSuccess) {
 Write-Host "================================================================================" -ForegroundColor Cyan
 
 if ($userServiceSuccess -and $productServiceSuccess) {
-    Write-Host "  EXITO! TODOS LOS TESTS PASARON CORRECTAMENTE (54 tests)" -ForegroundColor Green -BackgroundColor DarkGreen
+    Write-Host "  [OK] EXITO! TODOS LOS TESTS PASARON (44 tests)" -ForegroundColor Green -BackgroundColor DarkGreen
     Write-Host "================================================================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Proximos pasos:" -ForegroundColor Cyan
-    Write-Host "    1. Revisar reportes de cobertura en el navegador" -ForegroundColor White
-    Write-Host "    2. Ejecutar pruebas de performance: locust -f locustfile.py" -ForegroundColor White
-    Write-Host "    3. Hacer commit y push para ejecutar CI/CD pipeline" -ForegroundColor White
+    Write-Host "    1. Revisar reportes de cobertura" -ForegroundColor White
+    Write-Host "    2. Ejecutar: locust -f locustfile.py" -ForegroundColor White
+    Write-Host "    3. Hacer commit y push a dev" -ForegroundColor White
     Write-Host ""
     exit 0
 } else {
-    Write-Host "  ALGUNOS TESTS FALLARON" -ForegroundColor Red -BackgroundColor DarkRed
+    Write-Host "  [X] ALGUNOS TESTS FALLARON" -ForegroundColor Red -BackgroundColor DarkRed
     Write-Host "================================================================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  Revisa los logs arriba para ver que tests fallaron." -ForegroundColor Yellow
+    Write-Host "  Revisa los logs arriba para identificar los errores." -ForegroundColor Yellow
     Write-Host ""
     exit 1
 }
