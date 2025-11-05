@@ -1,6 +1,12 @@
-
 server:
   port: 9296
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
 
 spring:
   zipkin:
@@ -39,11 +45,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-
-
-
-
-
-
-
