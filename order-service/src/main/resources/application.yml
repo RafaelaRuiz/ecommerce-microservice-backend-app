@@ -1,7 +1,13 @@
-
 server:
   servlet:
     context-path: /order-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
 
 spring:
   zipkin:
@@ -12,7 +18,7 @@ spring:
     name: ORDER-SERVICE
   profiles:
     active:
-    - dev
+      - dev
 
 resilience4j:
   circuitbreaker:
@@ -35,12 +41,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-
-
-
-
-
-
-
-
