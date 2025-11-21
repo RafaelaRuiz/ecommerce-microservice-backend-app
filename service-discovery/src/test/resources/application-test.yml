@@ -1,0 +1,11 @@
+server:
+  port: 0
+spring:
+  application:
+    name: SERVICE-DISCOVERY
+  zipkin:
+    enabled: false
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false

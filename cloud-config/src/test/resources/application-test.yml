@@ -1,0 +1,16 @@
+server:
+  port: 0
+spring:
+  application:
+    name: CLOUD-CONFIG
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/SelimHorri/cloud-config-server
+          clone-on-start: false
+  zipkin:
+    enabled: false
+eureka:
+  client:
+    enabled: false
