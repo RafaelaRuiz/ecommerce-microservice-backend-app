@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.selimhorri.app.dto.ProductDto;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.selimhorri.app.exception.wrapper.ProductNotFoundException;
 import com.selimhorri.app.helper.ProductMappingHelper;
 import com.selimhorri.app.repository.ProductRepository;
@@ -22,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 	
-	private final ProductRepository productRepository;
+    private final ProductRepository productRepository;
+    private final MeterRegistry meterRegistry;
 	
 	@Override
 	public List<ProductDto> findAll() {
@@ -42,12 +44,14 @@ public class ProductServiceImpl implements ProductService {
 				.orElseThrow(() -> new ProductNotFoundException(String.format("Product with id: %d not found", productId)));
 	}
 	
-	@Override
-	public ProductDto save(final ProductDto productDto) {
-		log.info("*** ProductDto, service; save product *");
-		return ProductMappingHelper.map(this.productRepository
-				.save(ProductMappingHelper.map(productDto)));
-	}
+    @Override
+    public ProductDto save(final ProductDto productDto) {
+        log.info("*** ProductDto, service; save product *");
+        ProductDto dto = ProductMappingHelper.map(this.productRepository
+                .save(ProductMappingHelper.map(productDto)));
+        this.meterRegistry.counter("products_created").increment();
+        return dto;
+    }
 	
 	@Override
 	public ProductDto update(final ProductDto productDto) {
