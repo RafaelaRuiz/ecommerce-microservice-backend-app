@@ -1,0 +1,118 @@
+name: CI Calidad (Maven, SonarQube, Trivy)
+
+on:
+  push:
+    branches: [ develop, stage, master ]
+  pull_request:
+    branches: [ develop, stage, master ]
+
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build & Test (Maven)
+        run: mvn -B -ntp test --file pom.xml
+
+      - name: SonarQube (opcional si hay secretos)
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then
+            mvn -B -ntp verify sonar:sonar \
+              -DskipTests=false \
+              -Dsonar.host.url="$SONAR_HOST_URL" \
+              -Dsonar.login="$SONAR_TOKEN" \
+              -Dsonar.projectKey="${{ github.repository }}" \
+              -Dsonar.projectName="ecommerce-microservice-backend";
+          else
+            echo "SonarQube no configurado (faltan secretos SONAR_HOST_URL y SONAR_TOKEN)";
+          fi
+
+  trivy-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-analyze
+    strategy:
+      matrix:
+        include:
+          - service: api-gateway
+            image: api-gateway-ecommerce-boot
+          - service: cloud-config
+            image: cloud-config-ecommerce-boot
+          - service: service-discovery
+            image: service-discovery-ecommerce-boot
+          - service: proxy-client
+            image: proxy-client-ecommerce-boot
+          - service: user-service
+            image: user-service-ecommerce-boot
+          - service: product-service
+            image: product-service-ecommerce-boot
+          - service: favourite-service
+            image: favourite-service-ecommerce-boot
+          - service: order-service
+            image: order-service-ecommerce-boot
+          - service: shipping-service
+            image: shipping-service-ecommerce-boot
+          - service: payment-service
+            image: payment-service-ecommerce-boot
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Build all modules (jar)
+        run: mvn -B -ntp -DskipTests package --file pom.xml
+
+      - name: Docker login (opcional)
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+          else
+            echo "Docker Hub no configurado (se omite login)";
+          fi
+
+      - name: Build Docker image (scan)
+        env:
+          PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
+        run: |
+          TAG=${PROJECT_VERSION:-0.1.0}-scan
+          docker build -f ${{ matrix.service }}/Dockerfile \
+            --build-arg PROJECT_VERSION=${PROJECT_VERSION:-0.1.0} \
+            -t local/${{ matrix.image }}:$TAG .
+
+      - name: Trivy scan (HIGH,CRITICAL)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
+            image local/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}-scan \
+            --severity HIGH,CRITICAL --no-progress --exit-code 1
+
+      - name: Notificar fallo a Slack
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: "Falló Trivy en ${{ matrix.service }}"

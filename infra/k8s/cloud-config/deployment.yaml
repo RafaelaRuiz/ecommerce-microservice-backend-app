@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-config
+  labels:
+    app: cloud-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-config
+  template:
+    metadata:
+      labels:
+        app: cloud-config
+    spec:
+      containers:
+        - name: cloud-config
+          image: rafaelaruiz/cloud-config-ecommerce-boot:dev
+          ports:
+            - containerPort: 9296
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "dev"
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://service-discovery:8761/eureka/"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9296
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9296
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-config
+  labels:
+    app: cloud-config
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9296
+      targetPort: 9296
+      protocol: TCP
+      name: http
+  selector:
+    app: cloud-config

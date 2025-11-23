@@ -1,7 +1,13 @@
-
 server:
   servlet:
     context-path: /product-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
 
 spring:
   zipkin:
@@ -12,7 +18,7 @@ spring:
     name: PRODUCT-SERVICE
   profiles:
     active:
-    - dev
+      - dev
 
 resilience4j:
   circuitbreaker:
