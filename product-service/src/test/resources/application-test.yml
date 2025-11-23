@@ -1,0 +1,81 @@
+# ========================================
+# Configuración de Profile TEST
+# Product Service - Test Environment
+# ========================================
+
+server:
+  port: 0 # Puerto aleatorio para tests paralelos
+
+spring:
+  application:
+    name: product-service
+
+  # Base de datos H2 en memoria para tests
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA/Hibernate configuración para tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # Recrea el schema en cada test
+    show-sql: false # No mostrar SQL en logs de test
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # H2 Console deshabilitada en tests
+  h2:
+    console:
+      enabled: false
+
+  # Zipkin deshabilitado para tests
+  zipkin:
+    enabled: false
+    base-url: http://localhost:9411
+    sender:
+      type: web
+
+  # Sleuth deshabilitado para tests
+  sleuth:
+    enabled: false
+    sampler:
+      probability: 0.0
+
+# Eureka Client deshabilitado para tests
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    hostname: localhost
+
+# Actuator configuración para tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging configuración para tests
+logging:
+  level:
+    root: INFO
+    com.selimhorri.app: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    org.springframework.test: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

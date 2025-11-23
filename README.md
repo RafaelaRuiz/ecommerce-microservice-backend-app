@@ -1,26 +1,86 @@
-# e-Commerce-boot μServices 
+# Documentación Completa - Taller 2: Ecommerce Microservices Backend
 
-## Important Note: This project's new milestone is to move The whole system to work on Kubernetes, so stay tuned.
+> **Nota importante:** Este proyecto ha sido migrado a una arquitectura Cloud Native completa con Kubernetes, CI/CD automatizado con GitHub Actions, y observabilidad con Zipkin y Prometheus.
 
-<!--## Better Code Hub
-I analysed this repository according to the clean code standards on [Better Code Hub](https://bettercodehub.com/) just to get an independent opinion of how bad the code is. Surprisingly, the compliance score is high!
--->
-## Introduction
-- This project is a development of a small set of **Spring Boot** and **Cloud** based Microservices projects that implement cloud-native intuitive, Reactive Programming, Event-driven, Microservices design patterns, and coding best practices.
-- The project follows **CloudNative**<!--(https://www.cncf.io/)--> recommendations and The [**twelve-factor app**](https://12factor.net/) methodology for building *software-as-a-service apps* to show how μServices should be developed and deployed.
-- This project uses cutting edge technologies like Docker, Kubernetes, Elasticsearch Stack for
- logging and monitoring, Java SE 11, H2, and MySQL databases, all components developed with TDD in mind, covering integration & performance testing, and many more.
- - This project is going to be developed as stages, and all such stage steps are documented under
-  the project **e-Commerce-boot μServices** **README** file <!--[wiki page](https://github.com/mohamed-taman/Springy-Store-Microservices/wiki)-->.
 ---
+
+## 📋 Tabla de Contenidos
+
+1. [Resumen Ejecutivo](#1-resumen-ejecutivo)
+2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
+3. [Componentes Implementados](#3-componentes-implementados)
+4. [Configuración de CI/CD](#4-configuración-de-cicd)
+5. [Proceso de Despliegue](#5-proceso-de-despliegue)
+6. [Pruebas y Validación](#6-pruebas-y-validación)
+7. [Monitoreo y Trazabilidad](#7-monitoreo-y-trazabilidad)
+8. [Conclusiones y Resultados](#8-conclusiones-y-resultados)
+9. [Anexos](#9-anexos)
+
+---
+
+## 1. Resumen Ejecutivo
+
+### Objetivo del Proyecto
+
+Implementar una arquitectura de microservicios para una aplicación de e-commerce utilizando tecnologías modernas de contenedorización, orquestación y CI/CD, cumpliendo con los principios de **Cloud Native** y **12-Factor App**.
+
+### Tecnologías Utilizadas
+
+| Categoría                | Tecnología           | Versión      | Propósito                    |
+| ------------------------ | -------------------- | ------------ | ---------------------------- |
+| **Lenguaje**             | Java                 | 11 (Temurin) | Backend de microservicios    |
+| **Framework**            | Spring Boot          | 2.x          | Desarrollo de microservicios |
+| **Contenedorización**    | Docker               | Latest       | Empaquetado de aplicaciones  |
+| **Orquestación (Local)** | Docker Compose       | 3.x          | Despliegue local             |
+| **Orquestación (Cloud)** | Kubernetes           | 1.20+        | Despliegue en producción     |
+| **CI/CD**                | GitHub Actions       | N/A          | Automatización de pipelines  |
+| **Registro de Imágenes** | Docker Hub           | N/A          | Almacenamiento de imágenes   |
+| **Service Discovery**    | Eureka Server        | Netflix OSS  | Registro de servicios        |
+| **API Gateway**          | Spring Cloud Gateway | 2.x          | Enrutamiento centralizado    |
+| **Distributed Tracing**  | Zipkin               | Latest       | Trazabilidad de peticiones   |
+| **Configuration Server** | Spring Cloud Config  | 2.x          | Configuración centralizada   |
+| **IaC**                  | Terraform            | 1.6+         | Infraestructura como código  |
+| **Cloud Provider**       | Azure AKS            | N/A          | Kubernetes en la nube        |
+
+### Resultados Alcanzados
+
+✅ **7 microservicios** funcionando correctamente  
+✅ **18 workflows CI/CD** automatizados (6 servicios × 3 ambientes)  
+✅ **Imágenes Docker** publicadas en Docker Hub con estrategia de tags  
+✅ **Service Discovery** operativo con Eureka  
+✅ **Distributed Tracing** implementado con Zipkin  
+✅ **Health checks** configurados en todos los servicios  
+✅ **Infraestructura como Código** lista con Terraform para Azure
+
+---
+
+## 📚 Documentación del Taller 2
+
+Para la documentación completa de la implementación del Taller 2, que incluye:
+
+- Arquitectura detallada del sistema
+- Configuración de CI/CD con GitHub Actions
+- Despliegue con Docker Compose y Kubernetes
+- Pruebas y validación
+- Monitoreo con Zipkin y Prometheus
+
+**Ver:** [TALLER2_DOCUMENTATION.md](TALLER2_DOCUMENTATION.md)
+
+**Guía rápida:** [TALLER2_GUIDE.md](TALLER2_GUIDE.md)
+
+---
+
 ## Getting started
+
 ### System components Structure
+
 Let's explain first the system structure to understand its components:
+
 ```
 ecommerce-microservice-backend-app [μService] --> Parent folder.
 |- docs --> All docs and diagrams.
 |- k8s --> All **Kubernetes** config files.
-    |- proxy-client --> Authentication & Authorization µService, exposing all 
+    |- proxy-client --> Authentication & Authorization µService, exposing all
     |- api-gateway --> API Gateway server
     |- service-discovery --> Service Registery server
     |- cloud-config --> Centralized Configuration server
@@ -30,15 +90,16 @@ ecommerce-microservice-backend-app [μService] --> Parent folder.
     |- order-service --> Manage app orders based on carts
     |- shipping-service --> Manage app order-shipping products
     |- payment-service --> Manage app order payments
-|- compose.yml --> contains all services landscape with Kafka  
-|- run-em-all.sh --> Run all microservices in separate mode. 
-|- setup.sh --> Install all shared POMs and shared libraries. 
-|- stop-em-all.sh --> Stop all services runs in standalone mode. 
+|- compose.yml --> contains all services landscape with Kafka
+|- run-em-all.sh --> Run all microservices in separate mode.
+|- setup.sh --> Install all shared POMs and shared libraries.
+|- stop-em-all.sh --> Stop all services runs in standalone mode.
 |- test-em-all.sh --> This will start all docker compose landscape and test them, then shutdown docker compose containers with test finishes (use switch start stop)
 ```
+
 Now, as we have learned about different system components, then let's start.
 
-### System Boundary *Architecture* - μServices Landscape
+### System Boundary _Architecture_ - μServices Landscape
 
 ![System Boundary](app-architecture.drawio.png)
 
@@ -56,13 +117,13 @@ The following are the initially required software pieces:
 
 1. **jq**: This command-line JSON processor can be downloaded and installed from https://stedolan.github.io/jq/download/
 
-1. **Spring Boot Initializer**: This *Initializer* generates *spring* boot project with just what you need to start quickly! Start from here https://start.spring.io/
+1. **Spring Boot Initializer**: This _Initializer_ generates _spring_ boot project with just what you need to start quickly! Start from here https://start.spring.io/
 
 1. **Docker**: The fastest way to containerize applications on your desktop, and you can download it from here [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
 
 1. **Kubernetes**: We can install **minikube** for testing puposes https://minikube.sigs.k8s.io/docs/start/
 
-   > For each future stage, I will list the newly required software. 
+   > For each future stage, I will list the newly required software.
 
 Follow the installation guide for each software website link and check your software versions from the command line to verify that they are all installed correctly.
 
@@ -73,7 +134,9 @@ I recommend that you work with your Java code using an IDE that supports the dev
 All that you want to do is just fire up your IDE **->** open or import the parent folder `ecommerce-microservice-backend-app`, and everything will be ready for you.
 
 ## Data Model
+
 ### Entity-Relationship-Diagram
+
 ![System Boundary](ecommerce-ERD.drawio.png)
 
 ## Playing With e-Commerce-boot Project
@@ -91,11 +154,12 @@ The first thing to do is to open **git bash** command line, and then simply you 
 To build and run the test cases for each service & shared modules in the project, we need to do the following:
 
 #### Build & Test µServices
+
 Now it is the time to build our **10 microservices** and run each service integration test in
- isolation by running the following commands:
+isolation by running the following commands:
 
 ```bash
-selim@:~/ecommerce-microservice-backend-app$ ./mvnw clean package 
+selim@:~/ecommerce-microservice-backend-app$ ./mvnw clean package
 ```
 
 All build commands and test suite for each microservice should run successfully, and the final output should be like this:
@@ -104,7 +168,7 @@ All build commands and test suite for each microservice should run successfully,
 ---------------< com.selimhorri.app:ecommerce-microservice-backend >-----------
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for ecommerce-microservice-backend 0.1.0:
-[INFO] 
+[INFO]
 [INFO] ecommerce-microservice-backend ..................... SUCCESS [  0.548 s]
 [INFO] service-discovery .................................. SUCCESS [  3.126 s]
 [INFO] cloud-config ....................................... SUCCESS [  1.595 s]
@@ -125,6 +189,7 @@ All build commands and test suite for each microservice should run successfully,
 ```
 
 ### Running Them All
+
 Now it's the time to run all of our Microservices, and it's straightforward just run the following `docker-compose` commands:
 
 ```bash
@@ -147,19 +212,25 @@ Creating ecommerce-microservice-backend-app_proxy-client-container_1      ... do
 Creating ecommerce-microservice-backend-app_zipkin-container_1            ... done
 Creating ecommerce-microservice-backend-app_cloud-config-container_1      ... done
 ```
+
 ### Access proxy-client APIs
+
 You can manually test `proxy-client` APIs throughout its **Swagger** interface at the following
- URL [https://localhost:8900/swagger-ui.html](https://localhost:8900/swagger-ui.html).
+URL [https://localhost:8900/swagger-ui.html](https://localhost:8900/swagger-ui.html).
+
 ### Access Service Discovery Server (Eureka)
-If you would like to access the Eureka service discovery point to this URL [http://localhosts:8761/eureka](https://localhost:8761/eureka) to see all the services registered inside it. 
+
+If you would like to access the Eureka service discovery point to this URL [http://localhosts:8761/eureka](https://localhost:8761/eureka) to see all the services registered inside it.
 
 ### Access user-service APIs
- URL [https://localhost:8700/swagger-ui.html](https://localhost:8700/swagger-ui.html).
+
+URL [https://localhost:8700/swagger-ui.html](https://localhost:8700/swagger-ui.html).
 
 <!--
 Note that it is accessed through API Gateway and is secured. Therefore the browser will ask you for `username:mt` and `password:p,` write them to the dialog, and you will access it. This type of security is a **basic form security**.
 -->
-The **API Gateway** and **Store Service** both act as a *resource server*. <!--To know more about calling Store API in a secure way you can check the `test-em-all.sh` script on how I have changed the calling of the services using **OAuth2** security.-->
+
+The **API Gateway** and **Store Service** both act as a _resource server_. <!--To know more about calling Store API in a secure way you can check the `test-em-all.sh` script on how I have changed the calling of the services using **OAuth2** security.-->
 
 #### Check all **Spring Boot Actuator** exposed metrics http://localhost:8080/app/actuator/metrics:
 
@@ -250,7 +321,7 @@ zipkin_reporter_spans_dropped_total 4.0
 # HELP zipkin_reporter_spans_bytes_total Total bytes of encoded spans reported
 # TYPE zipkin_reporter_spans_bytes_total counter
 zipkin_reporter_spans_bytes_total 1681.0
-# HELP tomcat_sessions_active_current_sessions  
+# HELP tomcat_sessions_active_current_sessions
 # TYPE tomcat_sessions_active_current_sessions gauge
 tomcat_sessions_active_current_sessions 0.0
 # HELP jvm_classes_loaded_classes The number of classes that are currently loaded in the Java virtual machine
@@ -271,19 +342,19 @@ jvm_threads_daemon_threads 21.0
 # HELP zipkin_reporter_messages_total Messages reported (or attempted to be reported)
 # TYPE zipkin_reporter_messages_total counter
 zipkin_reporter_messages_total 2.0
-# HELP zipkin_reporter_messages_dropped_total  
+# HELP zipkin_reporter_messages_dropped_total
 # TYPE zipkin_reporter_messages_dropped_total counter
 zipkin_reporter_messages_dropped_total{cause="ResourceAccessException",} 2.0
 # HELP zipkin_reporter_messages_bytes_total Total bytes of messages reported
 # TYPE zipkin_reporter_messages_bytes_total counter
 zipkin_reporter_messages_bytes_total 1368.0
-# HELP http_server_requests_seconds  
+# HELP http_server_requests_seconds
 # TYPE http_server_requests_seconds summary
 http_server_requests_seconds_count{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/metrics",} 1.0
 http_server_requests_seconds_sum{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/metrics",} 1.339804427
 http_server_requests_seconds_count{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",} 1.0
 http_server_requests_seconds_sum{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",} 0.053689381
-# HELP http_server_requests_seconds_max  
+# HELP http_server_requests_seconds_max
 # TYPE http_server_requests_seconds_max gauge
 http_server_requests_seconds_max{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/metrics",} 1.339804427
 http_server_requests_seconds_max{exception="None",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",} 0.053689381
@@ -316,16 +387,16 @@ zipkin_reporter_spans_total 5.0
 # HELP zipkin_reporter_queue_bytes Total size of all encoded spans queued for reporting
 # TYPE zipkin_reporter_queue_bytes gauge
 zipkin_reporter_queue_bytes 0.0
-# HELP tomcat_sessions_expired_sessions_total  
+# HELP tomcat_sessions_expired_sessions_total
 # TYPE tomcat_sessions_expired_sessions_total counter
 tomcat_sessions_expired_sessions_total 0.0
-# HELP tomcat_sessions_alive_max_seconds  
+# HELP tomcat_sessions_alive_max_seconds
 # TYPE tomcat_sessions_alive_max_seconds gauge
 tomcat_sessions_alive_max_seconds 0.0
 # HELP process_uptime_seconds The uptime of the Java virtual machine
 # TYPE process_uptime_seconds gauge
 process_uptime_seconds 224.402
-# HELP tomcat_sessions_active_max_sessions  
+# HELP tomcat_sessions_active_max_sessions
 # TYPE tomcat_sessions_active_max_sessions gauge
 tomcat_sessions_active_max_sessions 0.0
 # HELP process_cpu_usage The "recent cpu usage" for the Java Virtual Machine process
@@ -341,7 +412,7 @@ logback_events_total{level="debug",} 79.0
 logback_events_total{level="error",} 0.0
 logback_events_total{level="trace",} 0.0
 logback_events_total{level="info",} 60.0
-# HELP tomcat_sessions_created_sessions_total  
+# HELP tomcat_sessions_created_sessions_total
 # TYPE tomcat_sessions_created_sessions_total counter
 tomcat_sessions_created_sessions_total 0.0
 # HELP jvm_threads_live_threads The current number of live threads including both daemon and non-daemon threads
@@ -355,7 +426,7 @@ jvm_threads_states_threads{state="waiting",} 8.0
 jvm_threads_states_threads{state="timed-waiting",} 11.0
 jvm_threads_states_threads{state="new",} 0.0
 jvm_threads_states_threads{state="terminated",} 0.0
-# HELP tomcat_sessions_rejected_sessions_total  
+# HELP tomcat_sessions_rejected_sessions_total
 # TYPE tomcat_sessions_rejected_sessions_total counter
 tomcat_sessions_rejected_sessions_total 0.0
 # HELP process_start_time_seconds Start time of the process since unix epoch.
@@ -432,109 +503,117 @@ jvm_gc_max_data_size_bytes 5.182062592E9
 ```
 
 #### Check All Services Health
+
 From ecommerce front Service proxy we can check all the core services health when you have all the
- microservices up and running using Docker Compose,
+microservices up and running using Docker Compose,
+
 ```bash
 selim@:~/ecommerce-microservice-backend-app$ curl -k https://localhost:8443/actuator/health -s | jq .components."\"Core Microservices\""
 ```
+
 This will result in the following response:
+
 ```json
 {
-    "status": "UP",
-    "components": {
-        "circuitBreakers": {
-            "status": "UP",
-            "details": {
-                "proxyService": {
-                    "status": "UP",
-                    "details": {
-                        "failureRate": "-1.0%",
-                        "failureRateThreshold": "50.0%",
-                        "slowCallRate": "-1.0%",
-                        "slowCallRateThreshold": "100.0%",
-                        "bufferedCalls": 0,
-                        "slowCalls": 0,
-                        "slowFailedCalls": 0,
-                        "failedCalls": 0,
-                        "notPermittedCalls": 0,
-                        "state": "CLOSED"
-                    }
-                }
-            }
-        },
-        "clientConfigServer": {
-            "status": "UNKNOWN",
-            "details": {
-                "error": "no property sources located"
-            }
-        },
-        "discoveryComposite": {
-            "status": "UP",
-            "components": {
-                "discoveryClient": {
-                    "status": "UP",
-                    "details": {
-                        "services": [
-                            "proxy-client",
-                            "api-gateway",
-                            "cloud-config",
-                            "product-service",
-                            "user-service",
-                            "favourite-service",
-                            "order-service",
-                            "payment-service",
-                            "shipping-service"
-                        ]
-                    }
-                },
-                "eureka": {
-                    "description": "Remote status from Eureka server",
-                    "status": "UP",
-                    "details": {
-                        "applications": {
-                            "FAVOURITE-SERVICE": 1,
-                            "PROXY-CLIENT": 1,
-                            "API-GATEWAY": 1,
-                            "PAYMENT-SERVICE": 1,
-                            "ORDER-SERVICE": 1,
-                            "CLOUD-CONFIG": 1,
-                            "PRODUCT-SERVICE": 1,
-                            "SHIPPING-SERVICE": 1,
-                            "USER-SERVICE": 1
-                        }
-                    }
-                }
-            }
-        },
-        "diskSpace": {
-            "status": "UP",
-            "details": {
-                "total": 981889826816,
-                "free": 325116776448,
-                "threshold": 10485760,
-                "exists": true
-            }
-        },
-        "ping": {
-            "status": "UP"
-        },
-        "refreshScope": {
-            "status": "UP"
+  "status": "UP",
+  "components": {
+    "circuitBreakers": {
+      "status": "UP",
+      "details": {
+        "proxyService": {
+          "status": "UP",
+          "details": {
+            "failureRate": "-1.0%",
+            "failureRateThreshold": "50.0%",
+            "slowCallRate": "-1.0%",
+            "slowCallRateThreshold": "100.0%",
+            "bufferedCalls": 0,
+            "slowCalls": 0,
+            "slowFailedCalls": 0,
+            "failedCalls": 0,
+            "notPermittedCalls": 0,
+            "state": "CLOSED"
+          }
         }
+      }
+    },
+    "clientConfigServer": {
+      "status": "UNKNOWN",
+      "details": {
+        "error": "no property sources located"
+      }
+    },
+    "discoveryComposite": {
+      "status": "UP",
+      "components": {
+        "discoveryClient": {
+          "status": "UP",
+          "details": {
+            "services": [
+              "proxy-client",
+              "api-gateway",
+              "cloud-config",
+              "product-service",
+              "user-service",
+              "favourite-service",
+              "order-service",
+              "payment-service",
+              "shipping-service"
+            ]
+          }
+        },
+        "eureka": {
+          "description": "Remote status from Eureka server",
+          "status": "UP",
+          "details": {
+            "applications": {
+              "FAVOURITE-SERVICE": 1,
+              "PROXY-CLIENT": 1,
+              "API-GATEWAY": 1,
+              "PAYMENT-SERVICE": 1,
+              "ORDER-SERVICE": 1,
+              "CLOUD-CONFIG": 1,
+              "PRODUCT-SERVICE": 1,
+              "SHIPPING-SERVICE": 1,
+              "USER-SERVICE": 1
+            }
+          }
+        }
+      }
+    },
+    "diskSpace": {
+      "status": "UP",
+      "details": {
+        "total": 981889826816,
+        "free": 325116776448,
+        "threshold": 10485760,
+        "exists": true
+      }
+    },
+    "ping": {
+      "status": "UP"
+    },
+    "refreshScope": {
+      "status": "UP"
     }
+  }
 }
 ```
+
 ### Testing Them All
+
 Now it's time to test all the application functionality as one part. To do so just run
- the following automation test script:
+the following automation test script:
 
 ```bash
 selim@:~/ecommerce-microservice-backend-app$ ./test-em-all.sh start
 ```
-> You can use `stop` switch with `start`, that will 
->1. start docker, 
->2. run the tests, 
->3. stop the docker instances.
+
+> You can use `stop` switch with `start`, that will
+>
+> 1.  start docker,
+> 2.  run the tests,
+> 3.  stop the docker instances.
 
 The result will look like this:
 
@@ -582,7 +661,9 @@ Test OK (actual value: OPEN_TO_HALF_OPEN)
 Test OK (actual value: HALF_OPEN_TO_CLOSED)
 End, all tests OK: Tue, May 31, 2020 2:10:09 AM
 ```
+
 ### Tracking the services with Zipkin
+
 Now, you can now track Microservices interactions throughout Zipkin UI from the following link:
 [http://localhost:9411/zipkin/](http://localhost:9411/zipkin/)
 ![Zipkin UI](zipkin-dash.png)
@@ -594,7 +675,8 @@ Finally, to close the story, we need to shut down Microservices manually service
 ```bash
 selim@:~/ecommerce-microservice-backend-app$ docker-compose -f compose.yml down --remove-orphans
 ```
- And you should see output like the following:
+
+And you should see output like the following:
 
 ```bash
 Removing ecommerce-microservice-backend-app_payment-service-container_1   ... done
@@ -610,12 +692,108 @@ Removing ecommerce-microservice-backend-app_api-gateway-container_1       ... do
 Removing ecommerce-microservice-backend-app_favourite-service-container_1 ... done
 Removing network ecommerce-microservice-backend-app_default
 ```
+
+---
+
+## 🔧 Configuración por Environment (Spring Profiles)
+
+### Estructura de Configuración
+
+Cada microservicio tiene archivos de configuración separados por environment usando **Spring Profiles**:
+
+```
+user-service/src/main/resources/
+├── application.yml              # Configuración base (común a todos los environments)
+├── application-dev.yml          # Development (local con Docker Compose)
+├── application-stage.yml        # Staging (pre-producción en Kubernetes)
+└── application-prod.yml         # Production (producción en Kubernetes)
+```
+
+### Ejemplo: application-dev.yml
+
+```yaml
+spring:
+  profiles:
+    active: dev
+
+eureka:
+  client:
+    service-url:
+      # En desarrollo, usa nombres de contenedores Docker
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://service-discovery-container:8761/eureka/}
+
+spring:
+  zipkin:
+    base-url: ${SPRING_ZIPKIN_BASE_URL:http://zipkin-container:9411}
+
+logging:
+  level:
+    root: DEBUG  # Más logs en desarrollo
+```
+
+### Ejemplo: application-prod.yml
+
+```yaml
+spring:
+  profiles:
+    active: prod
+
+eureka:
+  client:
+    service-url:
+      # En producción, usa DNS de Kubernetes con namespace
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://service-discovery.production.svc.cluster.local:8761/eureka/}
+
+spring:
+  zipkin:
+    base-url: ${SPRING_ZIPKIN_BASE_URL:http://zipkin.production.svc.cluster.local:9411}
+
+logging:
+  level:
+    root: WARN  # Solo errores en producción
+```
+
+### Cómo se Activa el Profile
+
+#### **Docker Compose (local)**
+
+```yaml
+user-service-container:
+  image: rafaelaruiz/user-service-ecommerce-boot:dev
+  environment:
+    - SPRING_PROFILES_ACTIVE=dev # ✅ Activa application-dev.yml
+```
+
+#### **Kubernetes (staging/prod)**
+
+```yaml
+containers:
+  - name: user-service
+    image: rafaelaruiz/user-service-ecommerce-boot:stage
+    env:
+      - name: SPRING_PROFILES_ACTIVE
+        value: "stage" # ✅ Activa application-stage.yml
+```
+
+### Ventajas de esta Estrategia
+
+| Aspecto                  | Beneficio                                   |
+| ------------------------ | ------------------------------------------- |
+| **Mismo JAR para todos** | Una imagen Docker sirve para dev/stage/prod |
+| **URLs dinámicas**       | localhost vs K8s DNS según el ambiente      |
+| **Logging apropiado**    | DEBUG en dev, WARN en prod                  |
+| **Sin rebuild**          | Solo cambiar variable de entorno            |
+
+---
+
 ### The End
-In the end, I hope you enjoyed the application and find it useful, as I did when I was developing it. 
-If you would like to enhance, please: 
-- **Open PRs**, 
-- Give **feedback**, 
+
+In the end, I hope you enjoyed the application and find it useful, as I did when I was developing it.
+If you would like to enhance, please:
+
+- **Open PRs**,
+- Give **feedback**,
 - Add **new suggestions**, and
 - Finally, give it a 🌟.
 
-*Happy Coding ...* 🙂
+_Happy Coding ..._ 🙂

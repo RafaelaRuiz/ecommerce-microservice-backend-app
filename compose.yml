@@ -15,6 +15,8 @@ services:
       - 9296:9296
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
     depends_on:
       - service-discovery-container
   api-gateway-container:

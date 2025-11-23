@@ -39,3 +39,6 @@ jobs:
           cd user-service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/user-service-ecommerce-boot:dev .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/user-service-ecommerce-boot:dev
+
+
+
