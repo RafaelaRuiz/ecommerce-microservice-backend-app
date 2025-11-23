@@ -9,7 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.junit.jupiter.api.BeforeEach;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Counter;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.selimhorri.app.domain.Product;
@@ -18,14 +23,26 @@ import com.selimhorri.app.repository.ProductRepository;
 import com.selimhorri.app.service.impl.ProductServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @ActiveProfiles("test")
 class ProductServiceImplTest {
 
     @Mock
     ProductRepository productRepository;
 
+    @Mock
+    MeterRegistry meterRegistry;
+
+    @Mock
+    Counter counter;
+
     @InjectMocks
     ProductServiceImpl productService;
+
+    @BeforeEach
+    void setup() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
+    }
 
     @Test
     void findById_returnsDto() {
