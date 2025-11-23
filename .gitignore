@@ -31,3 +31,23 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment Variables ###
+.env
+
+### Terraform ###
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+### Kubernetes ###
+kubeconfig
+*.pem
+*.key
