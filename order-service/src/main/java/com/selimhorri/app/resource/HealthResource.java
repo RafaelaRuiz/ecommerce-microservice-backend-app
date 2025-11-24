@@ -2,7 +2,7 @@ package com.selimhorri.app.resource;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,7 @@ public class HealthResource {
 
     @GetMapping("/status")
     public ResponseEntity<HealthStatus> getHealthStatus() {
-        Health health = healthEndpoint.health();
+        HealthComponent health = healthEndpoint.health();
         
         HealthStatus status = new HealthStatus();
         status.setOverallStatus(health.getStatus().getCode());
@@ -42,12 +42,11 @@ public class HealthResource {
 
     @GetMapping("/ready")
     public ResponseEntity<Map<String, Object>> readiness() {
-        Health health = healthEndpoint.health();
+        HealthComponent health = healthEndpoint.health();
         
         Map<String, Object> response = new HashMap<>();
         response.put("status", health.getStatus().getCode());
         response.put("type", "readiness");
-        response.put("components", health.getDetails());
         
         if ("UP".equals(health.getStatus().getCode())) {
             return ResponseEntity.ok(response);
@@ -56,16 +55,15 @@ public class HealthResource {
         }
     }
 
-    private Map<String, String> extractComponents(Health health) {
+    private Map<String, String> extractComponents(HealthComponent health) {
         Map<String, String> components = new HashMap<>();
         
-        if (health.getDetails() != null) {
-            health.getDetails().forEach((key, value) -> {
-                if (value instanceof Health) {
-                    components.put(key, ((Health) value).getStatus().getCode());
-                } else {
-                    components.put(key, value.toString());
-                }
+        if (health instanceof org.springframework.boot.actuate.health.CompositeHealth) {
+            org.springframework.boot.actuate.health.CompositeHealth compositeHealth = 
+                (org.springframework.boot.actuate.health.CompositeHealth) health;
+            
+            compositeHealth.getComponents().forEach((key, component) -> {
+                components.put(key, component.getStatus().getCode());
             });
         }
         

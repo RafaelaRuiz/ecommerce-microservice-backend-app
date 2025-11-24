@@ -39,17 +39,14 @@ public class RetryConfig {
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
 
-        // Política de reintentos
-        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-        retryPolicy.setMaxAttempts(3); // Máximo 3 intentos
-        
-        // Excepciones que disparan retry
+        // Política de reintentos con excepciones clasificadas
         Map<Class<? extends Throwable>, Boolean> retryableExceptions = new HashMap<>();
         retryableExceptions.put(org.springframework.web.client.ResourceAccessException.class, true);
         retryableExceptions.put(java.net.ConnectException.class, true);
         retryableExceptions.put(java.net.SocketTimeoutException.class, true);
         retryableExceptions.put(java.io.IOException.class, true);
-        retryPolicy.setRetryableExceptions(retryableExceptions);
+        
+        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(3, retryableExceptions);
 
         // Backoff exponencial: 1s, 2s, 4s
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
@@ -61,17 +58,38 @@ public class RetryConfig {
         retryTemplate.setBackOffPolicy(backOffPolicy);
 
         // Listener para logging
-        retryTemplate.registerListener(new RetryListener() {
-            @Override
-            public <T, E extends Throwable> void onError(
-                    RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-                log.warn("🔄 Retry attempt {} for operation: {} - Error: {}",
-                    context.getRetryCount(),
-                    callback.getClass().getSimpleName(),
-                    throwable.getMessage());
-            }
-        });
+        retryTemplate.registerListener(new CustomRetryListener());
 
         return retryTemplate;
+    }
+    
+    /**
+     * Listener personalizado para logging de reintentos
+     */
+    private static class CustomRetryListener implements RetryListener {
+        
+        @Override
+        public <T, E extends Throwable> boolean open(RetryContext context, RetryCallback<T, E> callback) {
+            // Se ejecuta antes del primer intento
+            log.debug("🔄 Starting retry operation");
+            return true;
+        }
+        
+        @Override
+        public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+            // Se ejecuta después del último intento
+            if (throwable != null) {
+                log.error("❌ Retry operation exhausted after {} attempts", context.getRetryCount());
+            } else {
+                log.debug("✅ Retry operation completed successfully");
+            }
+        }
+        
+        @Override
+        public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+            log.warn("🔄 Retry attempt {} failed - Error: {}", 
+                context.getRetryCount(), 
+                throwable.getMessage());
+        }
     }
 }
