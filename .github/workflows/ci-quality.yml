@@ -2,9 +2,9 @@ name: CI Calidad (Maven, SonarQube, Trivy)
 
 on:
   push:
-    branches: [ develop, stage, master ]
+    branches: [ dev, stage, master ]
   pull_request:
-    branches: [ develop, stage, master ]
+    branches: [ dev, stage, master ]
 
 jobs:
   build-and-analyze:
@@ -85,11 +85,11 @@ jobs:
 
       - name: Docker login (opcional)
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin;
           else
             echo "Docker Hub no configurado (se omite login)";
           fi
