@@ -1,0 +1,36 @@
+{
+  "annotations": {"list": []},
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests (ERROR)",
+      "targets": [{
+        "expr": "rate(http_server_requests_seconds_count{outcome='ERROR'}[5m])"
+      }]
+    },
+    {
+      "type": "graph",
+      "title": "Orders Created",
+      "targets": [{
+        "expr": "sum(increase(orders_created_total[10m]))"
+      }]
+    },
+    {
+      "type": "graph",
+      "title": "Users Registered",
+      "targets": [{
+        "expr": "sum(increase(users_registered_total[10m]))"
+      }]
+    },
+    {
+      "type": "graph",
+      "title": "Products Created",
+      "targets": [{
+        "expr": "sum(increase(products_created_total[10m]))"
+      }]
+    }
+  ],
+  "schemaVersion": 30,
+  "title": "Microservices Overview",
+  "timezone": "browser"
+}

@@ -12,6 +12,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import com.selimhorri.app.dto.ProductDto;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.selimhorri.app.exception.wrapper.ProductNotFoundException;
 import com.selimhorri.app.helper.ProductMappingHelper;
 import com.selimhorri.app.repository.ProductRepository;
@@ -26,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 	
-	private final ProductRepository productRepository;
+    private final ProductRepository productRepository;
+    private final MeterRegistry meterRegistry;
 	
 	/**
 	 * Listar productos con Retry para timeouts de DB
