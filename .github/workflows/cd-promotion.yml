@@ -23,20 +23,12 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
     steps:
       - uses: actions/checkout@v3
 
@@ -102,20 +94,12 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -173,20 +157,13 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
