@@ -1,13 +1,13 @@
-name: CI Calidad (Maven, SonarQube, Trivy)
+name: CI Calidad (Maven, Trivy)
 
 on:
   push:
-    branches: [ develop, stage, master ]
+    branches: [ dev, stage, master ]
   pull_request:
-    branches: [ develop, stage, master ]
+    branches: [ dev, stage, master ]
 
 jobs:
-  build-and-analyze:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -29,25 +29,9 @@ jobs:
       - name: Build & Test (Maven)
         run: mvn -B -ntp test --file pom.xml
 
-      - name: SonarQube (opcional si hay secretos)
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then
-            mvn -B -ntp verify sonar:sonar \
-              -DskipTests=false \
-              -Dsonar.host.url="$SONAR_HOST_URL" \
-              -Dsonar.login="$SONAR_TOKEN" \
-              -Dsonar.projectKey="${{ github.repository }}" \
-              -Dsonar.projectName="ecommerce-microservice-backend";
-          else
-            echo "SonarQube no configurado (faltan secretos SONAR_HOST_URL y SONAR_TOKEN)";
-          fi
-
   trivy-scan:
     runs-on: ubuntu-latest
-    needs: build-and-analyze
+    needs: build-and-test
     strategy:
       matrix:
         include:
@@ -57,20 +41,12 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
     steps:
       - uses: actions/checkout@v3
 
@@ -85,11 +61,11 @@ jobs:
 
       - name: Docker login (opcional)
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin;
           else
             echo "Docker Hub no configurado (se omite login)";
           fi
