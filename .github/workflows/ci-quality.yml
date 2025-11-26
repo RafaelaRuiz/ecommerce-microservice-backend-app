@@ -33,6 +33,7 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || 'rafaelaruiz' }}
         run: |
           if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then
             SONAR_PROJECT_KEY=$(echo "${{ github.repository }}" | tr '/' '_')
@@ -40,8 +41,9 @@ jobs:
               -DskipTests=false \
               -Dsonar.host.url="$SONAR_HOST_URL" \
               -Dsonar.login="$SONAR_TOKEN" \
+              -Dsonar.organization="$SONAR_ORGANIZATION" \
               -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-              -Dsonar.projectName="ecommerce-microservice-backend";
+              -Dsonar.projectName="ecommerce-microservice-backend"
           else
             echo "SonarQube no configurado (faltan secretos SONAR_HOST_URL y SONAR_TOKEN)";
           fi

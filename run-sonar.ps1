@@ -37,6 +37,15 @@ if (-not $env:SONAR_TOKEN) {
     exit 1
 }
 
+# SonarCloud requiere sonar.organization
+# Si no está configurado, usar el valor por defecto
+if (-not $env:SONAR_ORGANIZATION) {
+    $env:SONAR_ORGANIZATION = "rafaelaruiz"
+    Write-Host "  Usando organizacion por defecto: rafaelaruiz" -ForegroundColor Gray
+} else {
+    Write-Host "  Organizacion: $env:SONAR_ORGANIZATION" -ForegroundColor Gray
+}
+
 Write-Host ""
 Write-Host "Ejecutando analisis de SonarQube..." -ForegroundColor Cyan
 Write-Host "  Host: $env:SONAR_HOST_URL" -ForegroundColor Gray
@@ -64,11 +73,22 @@ Write-Host "  Project Key: $projectKey" -ForegroundColor Gray
 Write-Host ""
 
 # Ejecutar Maven con SonarQube
-.\mvnw.cmd clean verify sonar:sonar `
-    -Dsonar.host.url="$env:SONAR_HOST_URL" `
-    -Dsonar.login="$env:SONAR_TOKEN" `
-    -Dsonar.projectKey="$projectKey" `
-    -Dsonar.projectName="ecommerce-microservice-backend"
+$mavenArgs = @(
+    "clean",
+    "verify",
+    "sonar:sonar",
+    "-Dsonar.host.url=$env:SONAR_HOST_URL",
+    "-Dsonar.login=$env:SONAR_TOKEN",
+    "-Dsonar.projectKey=$projectKey",
+    "-Dsonar.projectName=ecommerce-microservice-backend"
+)
+
+# Agregar sonar.organization si está configurado
+if ($env:SONAR_ORGANIZATION) {
+    $mavenArgs += "-Dsonar.organization=$env:SONAR_ORGANIZATION"
+}
+
+& .\mvnw.cmd $mavenArgs
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
