@@ -74,10 +74,9 @@ jobs:
         env:
           PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
         run: |
-          TAG=${PROJECT_VERSION:-0.1.0}-scan
-          docker build -f ${{ matrix.service }}/Dockerfile \
+          docker build -f Dockerfile \
             --build-arg PROJECT_VERSION=${PROJECT_VERSION:-0.1.0} \
-            -t local/${{ matrix.image }}:$TAG .
+            -t local/${{ matrix.image }}:$TAG ${{ matrix.service }}
 
       - name: Trivy scan (HIGH,CRITICAL)
         run: |
