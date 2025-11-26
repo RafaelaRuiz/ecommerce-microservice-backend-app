@@ -1,4 +1,4 @@
-name: CI Calidad (Maven, SonarQube, Trivy)
+name: CI Calidad (Maven, Trivy)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ dev, stage, master ]
 
 jobs:
-  build-and-analyze:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -29,35 +29,9 @@ jobs:
       - name: Build & Test (Maven)
         run: mvn -B -ntp test --file pom.xml
 
-      - name: Set up JDK 17 for SonarQube
-        if: ${{ secrets.SONAR_HOST_URL != '' && secrets.SONAR_TOKEN != '' }}
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: SonarQube (opcional si hay secretos)
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || 'rafaelaruiz' }}
-        run: |
-          if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then
-            SONAR_PROJECT_KEY=$(echo "${{ github.repository }}" | tr '/' '_')
-            mvn -B -ntp verify sonar:sonar \
-              -DskipTests=false \
-              -Dsonar.host.url="$SONAR_HOST_URL" \
-              -Dsonar.login="$SONAR_TOKEN" \
-              -Dsonar.organization="$SONAR_ORGANIZATION" \
-              -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-              -Dsonar.projectName="ecommerce-microservice-backend"
-          else
-            echo "SonarQube no configurado (faltan secretos SONAR_HOST_URL y SONAR_TOKEN)";
-          fi
-
   trivy-scan:
     runs-on: ubuntu-latest
-    needs: build-and-analyze
+    needs: build-and-test
     strategy:
       matrix:
         include:
