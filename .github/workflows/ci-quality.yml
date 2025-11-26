@@ -29,6 +29,13 @@ jobs:
       - name: Build & Test (Maven)
         run: mvn -B -ntp test --file pom.xml
 
+      - name: Set up JDK 17 for SonarQube
+        if: ${{ secrets.SONAR_HOST_URL != '' && secrets.SONAR_TOKEN != '' }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
       - name: SonarQube (opcional si hay secretos)
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
