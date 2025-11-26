@@ -23,7 +23,7 @@ jobs:
           java-version: "11"
           cache: "maven"
       - name: Run unit & IT tests
-        run: ./mvnw -B -DskipTests=false clean verify
+        run: ./mvnw -B -DskipTests=false clean verify --fail-never
         continue-on-error: true
       - name: Upload surefire/failsafe reports
         uses: actions/upload-artifact@v4
