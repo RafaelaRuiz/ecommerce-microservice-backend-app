@@ -35,11 +35,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then
+            SONAR_PROJECT_KEY=$(echo "${{ github.repository }}" | tr '/' '_')
             mvn -B -ntp verify sonar:sonar \
               -DskipTests=false \
               -Dsonar.host.url="$SONAR_HOST_URL" \
               -Dsonar.login="$SONAR_TOKEN" \
-              -Dsonar.projectKey="${{ github.repository }}" \
+              -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
               -Dsonar.projectName="ecommerce-microservice-backend";
           else
             echo "SonarQube no configurado (faltan secretos SONAR_HOST_URL y SONAR_TOKEN)";
