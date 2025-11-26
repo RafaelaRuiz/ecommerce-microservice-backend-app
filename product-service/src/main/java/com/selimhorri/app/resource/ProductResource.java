@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.selimhorri.app.dto.ProductDto;
@@ -81,7 +82,37 @@ public class ProductResource {
 		return ResponseEntity.ok(true);
 	}
 	
+	/**
+	 * Endpoint para reducir stock (usado por Order Service)
+	 */
+	@PutMapping("/{productId}/stock/reduce")
+	public ResponseEntity<Void> reduceStock(
+			@PathVariable("productId") final String productId,
+			@RequestParam("quantity") final Integer quantity) {
+		log.info("📉 Reducing stock for product: {} by {}", productId, quantity);
+		
+		ProductDto product = this.productService.findById(Integer.parseInt(productId));
+		product.setQuantity(product.getQuantity() - quantity);
+		this.productService.update(product);
+		
+		return ResponseEntity.ok().build();
+	}
 	
+	/**
+	 * Endpoint para restaurar stock (compensación de saga)
+	 */
+	@PutMapping("/{productId}/stock/restore")
+	public ResponseEntity<Void> restoreStock(
+			@PathVariable("productId") final String productId,
+			@RequestParam("quantity") final Integer quantity) {
+		log.warn("🔄 Restoring stock for product: {} - adding back: {}", productId, quantity);
+		
+		ProductDto product = this.productService.findById(Integer.parseInt(productId));
+		product.setQuantity(product.getQuantity() + quantity);
+		this.productService.update(product);
+		
+		return ResponseEntity.ok().build();
+	}
 	
 }
 
