@@ -74,8 +74,7 @@ jobs:
         env:
           PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
         run: |
-          TAG=${PROJECT_VERSION:-0.1.0}
-          docker build -f Dockerfile \
+          docker build -f ${{ matrix.service }}/Dockerfile \
             --build-arg PROJECT_VERSION=$TAG \
             -t local/${{ matrix.image }}:$TAG ${{ matrix.service }}
 
