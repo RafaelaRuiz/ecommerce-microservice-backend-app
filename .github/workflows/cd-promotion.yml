@@ -2,7 +2,7 @@ name: CD Promoción (dev → stage → prod)
 
 on:
   push:
-    branches: [ develop, stage ]
+    branches: [ dev, stage ]
   release:
     types: [ published ]
 
@@ -11,7 +11,7 @@ env:
 
 jobs:
   deploy-dev:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     environment: dev
     strategy:
@@ -23,20 +23,12 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
     steps:
       - uses: actions/checkout@v3
 
@@ -59,9 +51,9 @@ jobs:
 
       - name: Docker login (Docker Hub)
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
       - name: Build image
         env:
@@ -70,17 +62,16 @@ jobs:
           TAG=${PROJECT_VERSION:-0.1.0}dev
           docker build -f ${{ matrix.service }}/Dockerfile \
             --build-arg PROJECT_VERSION=${PROJECT_VERSION:-0.1.0} \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:$TAG .
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:$TAG .
 
       - name: Trivy gate (HIGH,CRITICAL)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
-            image ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}dev \
+            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}dev \
             --severity HIGH,CRITICAL --no-progress --exit-code 1
 
       - name: Push image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}dev
-
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}dev
       - name: Notificar fallo a Slack
         if: failure()
         uses: rtCamp/action-slack-notify@v2
@@ -92,7 +83,7 @@ jobs:
   deploy-stage:
     if: github.ref == 'refs/heads/stage'
     runs-on: ubuntu-latest
-    environment: stage
+    environment: staging
     needs: []
     strategy:
       matrix:
@@ -103,20 +94,12 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -135,9 +118,9 @@ jobs:
         run: mvn -B -ntp -DskipTests package --file pom.xml
       - name: Docker login (Docker Hub)
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - name: Build image
         env:
           PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
@@ -149,10 +132,10 @@ jobs:
       - name: Trivy gate (HIGH,CRITICAL)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
-            image ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}stage \
+            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}stage \
             --severity HIGH,CRITICAL --no-progress --exit-code 1
       - name: Push image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}stage
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}stage
       - name: Notificar fallo a Slack
         if: failure()
         uses: rtCamp/action-slack-notify@v2
@@ -164,7 +147,7 @@ jobs:
   deploy-prod:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    environment: prod
+    environment: production
     strategy:
       matrix:
         include:
@@ -174,20 +157,13 @@ jobs:
             image: cloud-config-ecommerce-boot
           - service: service-discovery
             image: service-discovery-ecommerce-boot
-          - service: proxy-client
-            image: proxy-client-ecommerce-boot
           - service: user-service
             image: user-service-ecommerce-boot
           - service: product-service
             image: product-service-ecommerce-boot
-          - service: favourite-service
-            image: favourite-service-ecommerce-boot
           - service: order-service
             image: order-service-ecommerce-boot
-          - service: shipping-service
-            image: shipping-service-ecommerce-boot
-          - service: payment-service
-            image: payment-service-ecommerce-boot
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -206,27 +182,27 @@ jobs:
         run: mvn -B -ntp -DskipTests package --file pom.xml
       - name: Docker login (Docker Hub)
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - name: Build image
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           docker build -f ${{ matrix.service }}/Dockerfile \
             --build-arg PROJECT_VERSION=${RELEASE_TAG#v} \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v} .
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v} .
       - name: Trivy gate (HIGH,CRITICAL)
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
-            image ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v} \
+            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v} \
             --severity HIGH,CRITICAL --no-progress --exit-code 1
       - name: Push image
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v}
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${RELEASE_TAG#v}
       - name: Notificar fallo a Slack
         if: failure()
         uses: rtCamp/action-slack-notify@v2
