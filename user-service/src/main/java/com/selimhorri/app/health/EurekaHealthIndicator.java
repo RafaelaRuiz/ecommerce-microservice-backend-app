@@ -28,7 +28,7 @@ public class EurekaHealthIndicator implements HealthIndicator {
                 .getInfo()
                 .getAppName();
             
-            // Obtener lista de servicios registrados
+            // Obtener lista de servicios registradossi
             List<String> registeredServices = eurekaClient.getApplications()
                 .getRegisteredApplications()
                 .stream()
