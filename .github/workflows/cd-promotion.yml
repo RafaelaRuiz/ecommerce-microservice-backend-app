@@ -65,13 +65,20 @@ jobs:
             -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:$TAG .
 
       - name: Trivy gate (HIGH,CRITICAL)
+        env:
+          PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
         run: |
+          TAG=${PROJECT_VERSION:-0.1.0}dev
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
-            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}dev \
+            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${TAG} \
             --severity HIGH,CRITICAL --no-progress --exit-code 1
 
       - name: Push image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}dev
+        env:
+          PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
+        run: |
+          TAG=${PROJECT_VERSION:-0.1.0}dev
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${TAG}
       - name: Notificar fallo a Slack
         if: failure()
         uses: rtCamp/action-slack-notify@v2
@@ -128,14 +135,21 @@ jobs:
           TAG=${PROJECT_VERSION:-0.1.0}stage
           docker build -f ${{ matrix.service }}/Dockerfile \
             --build-arg PROJECT_VERSION=${PROJECT_VERSION:-0.1.0} \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:$TAG .
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:$TAG .
       - name: Trivy gate (HIGH,CRITICAL)
+        env:
+          PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
         run: |
+          TAG=${PROJECT_VERSION:-0.1.0}stage
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.54.1 \
-            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION || '0.1.0' }}stage \
+            image ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${TAG} \
             --severity HIGH,CRITICAL --no-progress --exit-code 1
       - name: Push image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ secrets.PROJECT_VERSION }}stage
+        env:
+          PROJECT_VERSION: ${{ secrets.PROJECT_VERSION }}
+        run: |
+          TAG=${PROJECT_VERSION:-0.1.0}stage
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${TAG}
       - name: Notificar fallo a Slack
         if: failure()
         uses: rtCamp/action-slack-notify@v2

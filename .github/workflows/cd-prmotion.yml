@@ -1,0 +1,113 @@
+name: CI Promotion - Promote Images Between Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Source branch (dev, stage)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stage
+      target_branch:
+        description: "Target branch (stage, master)"
+        required: true
+        type: choice
+        options:
+          - stage
+          - master
+      services:
+        description: 'Services to promote (comma-separated, or "all")'
+        required: true
+        default: "all"
+        type: string
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate promotion path
+        run: |
+          if [[ "${{ inputs.source_branch }}" == "dev" && "${{ inputs.target_branch }}" != "stage" ]]; then
+            echo "Error: dev can only be promoted to stage"
+            exit 1
+          fi
+          if [[ "${{ inputs.source_branch }}" == "stage" && "${{ inputs.target_branch }}" != "master" ]]; then
+            echo "Error: stage can only be promoted to master"
+            exit 1
+          fi
+          echo "Promotion path validated: ${{ inputs.source_branch }} -> ${{ inputs.target_branch }}"
+
+  prepare-matrix:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-services.outputs.services }}
+    steps:
+      - name: Set services matrix
+        id: set-services
+        run: |
+          if [[ "${{ inputs.services }}" == "all" ]]; then
+            SERVICES='["api-gateway","cloud-config","service-discovery","user-service","product-service","order-service"]'
+          else
+            # Convert comma-separated string to JSON array
+            SERVICES=$(echo "${{ inputs.services }}" | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/')
+          fi
+          echo "services=${SERVICES}" >> $GITHUB_OUTPUT
+          echo "Services to promote: ${SERVICES}"
+
+  promote:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.prepare-matrix.outputs.services) }}
+      fail-fast: false
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull, retag and push image
+        run: |
+          SERVICE="${{ matrix.service }}"
+          SOURCE_TAG="${{ inputs.source_branch }}"
+          TARGET_TAG="${{ inputs.target_branch }}"
+          IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/${SERVICE}-ecommerce-boot"
+
+          echo "Promoting ${IMAGE_NAME}:${SOURCE_TAG} -> ${IMAGE_NAME}:${TARGET_TAG}"
+
+          # Pull source image
+          docker pull ${IMAGE_NAME}:${SOURCE_TAG}
+
+          # Retag for target branch
+          docker tag ${IMAGE_NAME}:${SOURCE_TAG} ${IMAGE_NAME}:${TARGET_TAG}
+
+          # Push to target
+          docker push ${IMAGE_NAME}:${TARGET_TAG}
+
+          echo "Successfully promoted ${SERVICE}"
+
+  trigger-deployment:
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment to target environment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: deploy-to-aks
+          client-payload: '{"environment": "${{ inputs.target_env }}", "trigger": "promotion"}'
+
+      - name: Summary
+        run: |
+          echo "## Promotion Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | Target | Services |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ inputs.source_branch }} | ${{ inputs.target_branch }} | ${{ inputs.services }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment workflow triggered for **${{ inputs.target_branch }}** branch." >> $GITHUB_STEP_SUMMARY

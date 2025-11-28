@@ -1,0 +1,40 @@
+name: Deploy to Azure AKS
+
+on:
+  repository_dispatch:
+    types: [deploy-to-aks]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.client_payload.environment || inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Forward deployment event to infra repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: ${{ secrets.INFRA_REPO }}
+          event-type: deploy-to-aks
+          client-payload: '{"environment": "${{ github.event.client_payload.environment || inputs.environment }}", "source": "app-repo"}'
+
+      - name: Summary
+        run: |
+          echo "## Deployment Event Forwarded" >> $GITHUB_STEP_SUMMARY
+          echo "Environment: ${{ github.event.client_payload.environment || inputs.environment }}" >> $GITHUB_STEP_SUMMARY
