@@ -14,6 +14,7 @@ env:
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
+    environment: ${{ needs.detect-changes.outputs.environment }}
     outputs:
       api-gateway: ${{ steps.changes.outputs.api-gateway }}
       cloud-config: ${{ steps.changes.outputs.cloud-config }}
@@ -240,15 +241,15 @@ jobs:
       - build-product-service
       - build-order-service
 
-    if: |
-      always() && 
+    if: >
+      always() &&
       github.event_name == 'push' &&
       (needs.build-api-gateway.result == 'success' || needs.build-api-gateway.result == 'skipped') &&
       (needs.build-cloud-config.result == 'success' || needs.build-cloud-config.result == 'skipped') &&
       (needs.build-service-discovery.result == 'success' || needs.build-service-discovery.result == 'skipped') &&
       (needs.build-user-service.result == 'success' || needs.build-user-service.result == 'skipped') &&
       (needs.build-product-service.result == 'success' || needs.build-product-service.result == 'skipped') &&
-      (needs.build-order-service.result == 'success' || needs.build-order-service.result == 'skipped') &&
+      (needs.build-order-service.result == 'success' || needs.build-order-service.result == 'skipped')
 
     runs-on: ubuntu-latest
     steps:
