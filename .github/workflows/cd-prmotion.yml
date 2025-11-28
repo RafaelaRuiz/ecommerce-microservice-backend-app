@@ -95,12 +95,22 @@ jobs:
     needs: promote
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deployment to target environment
+      - name: Map target branch to environment
+        id: map-env
+        run: |
+          if [ "${{ inputs.target_branch }}" = "stage" ]; then
+            echo "env=staging" >> $GITHUB_OUTPUT
+          else
+            echo "env=production" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger deployment to target environment (infra repo)
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: ${{ secrets.INFRA_REPO }}
           event-type: deploy-to-aks
-          client-payload: '{"environment": "${{ inputs.target_env }}", "trigger": "promotion"}'
+          client-payload: '{"environment": "${{ steps.map-env.outputs.env }}", "trigger": "promotion"}'
 
       - name: Summary
         run: |
